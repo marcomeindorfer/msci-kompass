@@ -14,8 +14,8 @@ import urllib.request
 import pandas as pd
 
 # ---------------------------------------------------------------- Einstellungen
-TICKERS = [("EUNL.DE", "iShares Core MSCI World (Acc), Xetra"),
-           ("IWDA.AS", "iShares Core MSCI World (Acc), Amsterdam")]
+TICKERS = [("EUNL.DE", "iShares Core MSCI World UCITS ETF USD (Acc) · ISIN IE00B4L5Y983 · Xetra, EUR"),
+           ("EUNL.F", "iShares Core MSCI World UCITS ETF USD (Acc) · ISIN IE00B4L5Y983 · Frankfurt, EUR")]
 SPAR = 100.0        # Beispiel: monatlicher Sparplan in EUR
 RUECKLAGE = 25.0    # Beispiel: monatlich in die Dip-Ruecklage in EUR
 # Stufen: (Mindest-Abstand zum Allzeithoch, Stufe, Anteil der Ruecklage)
