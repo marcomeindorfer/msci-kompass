@@ -1,0 +1,40 @@
+name: MSCI-Kompass
+
+on:
+  schedule:
+    - cron: "30 18 * * 1-5"   # werktags 18:30 UTC, nach Xetra-Schluss
+  workflow_dispatch:
+    inputs:
+      test:
+        description: "Test-Push senden"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: kompass
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install --quiet yfinance pandas
+      - name: Analyse + Seite + Push
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          TEST_PUSH: ${{ inputs.test }}
+        run: python bot.py
+      - name: Ergebnis committen
+        run: |
+          git config user.name "msci-kompass-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/index.html state.json data/kurse.csv
+          git diff --cached --quiet || git commit -m "Update $(date -u +%Y-%m-%d)"
+          git push
