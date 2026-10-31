@@ -6,7 +6,7 @@ Täglicher Kaufsignal-Check für den MSCI World (iShares Core MSCI World, EUNL) 
 
 ## So funktioniert's
 
-- Eine GitHub Action (`.github/workflows/kompass.yml`) läuft werktags um 18:30 UTC.
+- Eine GitHub Action (`.github/workflows/kompass.yml`) läuft werktags stündlich von 07:15 bis 17:15 UTC (Xetra-Handelszeit, ca. 15 Min. verzögerte Kurse).
 - `bot.py` lädt die Kurse von Yahoo Finance (Fallback: zuletzt gespeicherte `data/kurse.csv`) und berechnet Abstand zum Allzeithoch, 200-Tage-Linie und RSI.
 - Daraus ermittelt es die Dip-Stufe:
   - Stufe 1 ab −5 % → 25 % der Rücklage investieren

@@ -134,7 +134,7 @@ const STUFE_TXT = ["Kein Dip", "Kleiner Dip", "Korrektur", "Crash"];
 
 function render() {
   const A = D.akt, R = D.regeln;
-  $("sub").textContent = `${D.name} (${D.ticker}) · Schlusskurs vom ${dat(A.datum)}`;
+  $("sub").textContent = `${D.name} (${D.ticker}) · Kurs vom ${dat(A.datum)}, geprüft ${new Date(D.erstellt).toLocaleString("de-DE", {dateStyle: "short", timeStyle: "short"})} Uhr (Börsenkurs ca. 15 Min. verzögert)`;
   if (D.warnung) $("warn").innerHTML = `<div class="warn">⚠️ ${D.warnung}</div>`;
 
   // ---------- Status

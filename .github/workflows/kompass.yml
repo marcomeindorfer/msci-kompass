@@ -2,7 +2,7 @@ name: MSCI-Kompass
 
 on:
   schedule:
-    - cron: "30 18 * * 1-5"   # werktags 18:30 UTC, nach Xetra-Schluss
+    - cron: "15 7-17 * * 1-5"   # werktags stündlich 07:15-17:15 UTC (deckt Xetra-Handelszeit im Sommer und Winter ab)
   workflow_dispatch:
     inputs:
       test:
@@ -37,5 +37,5 @@ jobs:
           git config user.name "msci-kompass-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add docs/index.html state.json data/kurse.csv
-          git diff --cached --quiet || git commit -m "Update $(date -u +%Y-%m-%d)"
+          git diff --cached --quiet || git commit -m "Update $(date -u '+%Y-%m-%d %H:%M') UTC"
           git push
