@@ -365,7 +365,7 @@ function drawAll() {
   const R = D.regeln.stufen;
   chart($("cDd"), {t: T.slice(i0), label: "Abstand zum Hoch", yMax: 0, fmt: (v, f) => nf(v, f ? 1 : 0) + " %",
     series: [{name: "Abstand", color: css("--s1"), v: K.dd.slice(i0), area: 0, width: 1.5}],
-    refs: R.map(r => ({v: -r.schwelle * 100, label: "Stufe " + r.stufe}))});
+    refs: R.map(r => ({v: -r.schwelle * 100, label: "−" + Math.round(r.schwelle * 100) + " %"}))});
   const V = D.bt.verlauf, BT = V.t.map(s => Date.parse(s));
   chart($("cBt"), {t: BT, label: "Backtest", fmt: (v, f) => f ? eur(v, 0) : nf(v / 1000, 0) + "k",
     series: [{name: "Sofort", color: css("--s1"), v: V.A}, {name: "Teil aufheben", color: css("--s2"), v: V.B},
