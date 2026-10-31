@@ -30,6 +30,7 @@ jobs:
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           TEST_PUSH: ${{ inputs.test }}
+          PYTHONWARNINGS: ignore
         run: python bot.py
       - name: Ergebnis committen
         run: |

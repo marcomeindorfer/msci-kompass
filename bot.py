@@ -48,6 +48,7 @@ def lade_kurse():
                     s.index = pd.to_datetime(s.index).tz_localize(None).normalize()
                     s = s[~s.index.duplicated(keep="last")].sort_index()
                     s.name = ticker
+                    os.makedirs(os.path.dirname(CACHE), exist_ok=True)
                     s.to_frame().to_csv(CACHE)
                     return ticker, name, s, None
             except Exception as e:  # noqa: BLE001
