@@ -1,7 +1,7 @@
 """MSCI-Kompass: taeglicher Kauf-Signal-Bot fuer einen MSCI-World-ETF.
 
 Laeuft in GitHub Actions. Holt Kurse, berechnet Dip-Signale, macht einen
-Backtest (Sparplan vs. Sparplan + Dip-Ruecklage vs. nur Dip-Kaeufe),
+Backtest (sofort kaufen vs. Teil fuer Dips aufheben vs. nur Dip-Kaeufe),
 schreibt docs/index.html und schickt bei neuen Signalen eine ntfy-Push.
 """
 import datetime as dt
@@ -17,8 +17,8 @@ import pandas as pd
 # ---------------------------------------------------------------- Einstellungen
 TICKERS = [("EUNL.DE", "iShares Core MSCI World UCITS ETF USD (Acc) · ISIN IE00B4L5Y983 · Xetra, EUR"),
            ("EUNL.F", "iShares Core MSCI World UCITS ETF USD (Acc) · ISIN IE00B4L5Y983 · Frankfurt, EUR")]
-SPAR = 100.0        # Beispiel: monatlicher Sparplan in EUR
-RUECKLAGE = 25.0    # Beispiel: monatlich in die Dip-Ruecklage in EUR
+SPAR = 100.0        # Backtest: monatlich sofort angelegter Betrag in EUR
+RUECKLAGE = 25.0    # Backtest: monatlich fuer Dips aufgehobener Betrag in EUR
 # Stufen: (Mindest-Abstand zum Allzeithoch, Stufe, Anteil der Ruecklage)
 STUFEN = [(0.05, 1, 0.25), (0.10, 2, 0.50), (0.20, 3, 1.00)]
 RESET = 0.01        # innerhalb 1 % am Hoch -> Dip-Phase vorbei, Stufen zuruecksetzen
@@ -270,9 +270,9 @@ def main():
     stufe_jetzt = PUSH_STARK if sc >= PUSH_STARK else PUSH_AB if sc >= PUSH_AB else 0
     if stufe_jetzt > gemeldet:
         if stufe_jetzt == PUSH_STARK:
-            titel, kern, prio = f"MSCI World: Seltene Kaufgelegenheit ({sc}/10)", "Ein größerer Extra-Kauf lohnt sich.", 5
+            titel, kern, prio = f"MSCI World: Seltene Kaufgelegenheit ({sc}/10)", "Ein großer Kauf lohnt sich, solange du das Geld langfristig nicht brauchst.", 5
         else:
-            titel, kern, prio = f"MSCI World: Kaufempfehlung {sc}/10", "Ein Extra-Kauf zusätzlich zum Sparplan lohnt sich.", 4
+            titel, kern, prio = f"MSCI World: Kaufempfehlung {sc}/10", "Jetzt ist ein guter Zeitpunkt für einen größeren Kauf.", 4
         text = f"{kern} Der ETF kostet {eur(kurs)} und liegt {pct(akt['dd'])} unter seinem Hoch."
         if akt["rsi"] < 30:
             text += " Gerade wird viel verkauft (Panik), historisch oft ein guter Einstieg."

@@ -137,20 +137,19 @@ details[open] summary.more{border-style:solid}
 
   <section class="card">
     <h2>Kursverlauf</h2>
-    <p class="hint">Mit 200-Tage-Linie. Punkte zeigen Tage, an denen eine neue Kaufstufe erreicht wurde.</p>
+    <p class="hint">Mit 200-Tage-Linie. Die Punkte zeigen Tage, an denen der ETF erstmals 5, 10 bzw. 20 % unter seinem Hoch lag.</p>
     <div class="seg" id="rangeKurs"></div>
-    <div class="legend"><span><i style="background:var(--s1)"></i>Kurs</span><span><i style="background:var(--s2)"></i>200-Tage-Linie</span><span><i style="background:var(--ink);height:8px;width:8px;border-radius:50%"></i>Signal</span></div>
+    <div class="legend"><span><i style="background:var(--s1)"></i>Kurs</span><span><i style="background:var(--s2)"></i>200-Tage-Linie</span><span><i style="background:var(--ink);height:8px;width:8px;border-radius:50%"></i>Rücksetzer</span></div>
     <div class="chart" id="cKurs"></div>
   </section>
 
   <section class="card">
     <h2>Abstand zum Allzeithoch</h2>
-    <p class="hint">Wie tief der ETF jeweils unter seinem bisherigen Höchststand lag. Die gestrichelten Linien sind die Kaufstufen.</p>
+    <p class="hint">Wie tief der ETF jeweils unter seinem bisherigen Höchststand lag. Die gestrichelten Linien markieren −5, −10 und −20 %.</p>
     <div class="seg" id="rangeDd"></div>
     <div class="chart" id="cDd"></div>
   </section>
 
-  <section class="card" id="regeln"></section>
 
   <section class="card" id="backtest"></section>
 
@@ -160,9 +159,9 @@ details[open] summary.more{border-style:solid}
     <h2>Wichtig</h2>
     <ul class="hint">
       <li>Das ist keine Anlageberatung, sondern eine feste, nachvollziehbare Regel. Vergangene Kurse sagen künftige nicht voraus.</li>
-      <li>Market-Timing schlägt einen einfachen Sparplan langfristig meist <b>nicht</b>, weil das Geld bis zum Dip als Cash herumliegt und nicht wächst. Der Backtest oben zeigt das ehrlich für die echten Kursdaten.</li>
-      <li>Der Vorteil der Dip-Regel ist eher psychologisch: Du hast einen Plan für Crashs und kaufst dann, statt in Panik zu verkaufen.</li>
-      <li>Gebühren, Steuern und Zinsen auf die Cash-Rücklage sind im Backtest nicht berücksichtigt. Mit 2–3 % Tagesgeldzins sieht die Rücklage etwas besser aus.</li>
+      <li>Auf Rücksetzer zu warten schlägt sofortiges Kaufen langfristig meist <b>nicht</b>, weil das Geld bis dahin als Cash herumliegt und nicht wächst. Der Backtest oben zeigt das für die echten Kursdaten. Die Empfehlung hilft deshalb vor allem bei der Frage, ob du gerade <i>mehr als sonst</i> kaufen solltest.</li>
+      <li>Bei Crashs hilft eine feste Regel: kaufen statt in Panik verkaufen.</li>
+      <li>Gebühren, Steuern und Zinsen auf das wartende Geld sind im Backtest nicht berücksichtigt. Mit 2–3 % Tagesgeldzins sieht das Aufheben etwas besser aus.</li>
     </ul>
   </section>
   </details>
@@ -177,11 +176,11 @@ const pct = (x, d = 1) => (x > 0 ? "+" : x < 0 ? "−" : "") + nf(Math.abs(x * 1
 const dat = s => { const [y, m, d] = s.split("-"); return `${d}.${m}.${y}`; };
 const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 const STUFE_TXT = ["Kein Dip", "Kleiner Dip", "Korrektur", "Crash"];
-const BAND = s => s <= 2 ? {i: 0, titel: "Kein besonderer Kaufzeitpunkt", text: "Lass deinen Sparplan einfach normal weiterlaufen. Ein Extra-Kauf bringt gerade keinen Vorteil. Geld, das du zusätzlich anlegen willst, wartet besser auf einen Rücksetzer."}
-  : s <= 4 ? {i: 1, titel: "Etwas günstiger als sonst", text: "Ein kleiner Extra-Kauf ist okay, aber kein Muss. Der Sparplan läuft normal weiter."}
-  : s <= 6 ? {i: 2, titel: "Guter Zeitpunkt für einen kleinen Extra-Kauf", text: "Der ETF ist spürbar günstiger als zuletzt. Ein Teil deines Extra-Geldes kann jetzt investiert werden, den Rest hebst du für den Fall auf, dass es weiter fällt."}
-  : s <= 8 ? {i: 3, titel: "Klare Kaufempfehlung", text: "Der ETF hat deutlich nachgegeben. Ein Extra-Kauf zusätzlich zum Sparplan lohnt sich jetzt. Wenn der Trend noch nach unten zeigt, kauf am besten in zwei Teilen im Abstand von ein paar Wochen."}
-  : {i: 4, titel: "Seltene Kaufgelegenheit", text: "So günstig gibt es den MSCI World nur selten, etwa bei großen Crashs. Historisch waren solche Tage die besten Einstiege. Ein größerer Extra-Kauf lohnt sich, solange du das Geld langfristig nicht brauchst."};
+const BAND = s => s <= 2 ? {i: 0, titel: "Normaler Kaufzeitpunkt", text: "Nichts Besonderes: Der ETF ist gerade nicht günstiger als sonst. Wenn du Geld anlegen willst, kannst du trotzdem ganz normal kaufen, denn lange auf einen Rücksetzer zu warten hat sich historisch meist nicht gelohnt. Einen Grund, jetzt mehr als üblich zu kaufen, gibt es aber nicht."}
+  : s <= 4 ? {i: 1, titel: "Etwas günstiger als sonst", text: "Der ETF ist leicht zurückgekommen. Das ist ein guter Moment für deinen normalen Kauf, gern auch etwas mehr als sonst."}
+  : s <= 6 ? {i: 2, titel: "Guter Kaufzeitpunkt", text: "Der ETF ist spürbar günstiger als zuletzt. Jetzt zu kaufen lohnt sich, auch mehr als üblich. Behalte etwas Geld zurück, falls es noch weiter fällt."}
+  : s <= 8 ? {i: 3, titel: "Klare Kaufempfehlung", text: "Der ETF hat deutlich nachgegeben. Jetzt ist ein guter Zeitpunkt für einen größeren Kauf. Zeigt der Trend noch nach unten, kauf am besten in zwei Teilen im Abstand von ein paar Wochen."}
+  : {i: 4, titel: "Seltene Kaufgelegenheit", text: "So günstig gibt es den MSCI World nur selten, etwa bei großen Crashs. Historisch waren solche Tage die besten Einstiege. Ein großer Kauf lohnt sich, solange du das Geld langfristig nicht brauchst."};
 
 function render() {
   const A = D.akt, R = D.regeln;
@@ -201,11 +200,11 @@ function render() {
       <div><div class="lbl">Kaufempfehlung</div><h2>${band.titel}</h2></div>
     </div>
     <div class="scale" aria-hidden="true">${Array.from({length: 10}, (_, k) => `<span class="${k + 1 === sc ? "on" : ""}" style="background:var(--b${BAND(k + 1).i})"></span>`).join("")}</div>
-    <div class="scale-l"><span>1 · normal sparen</span><span>10 · seltene Chance</span></div>
+    <div class="scale-l"><span>1 · normaler Zeitpunkt</span><span>10 · seltene Chance</span></div>
     <p class="was">${band.text}</p>
     <ul class="gruende">
       ${grund(T3.dd, `Der ETF liegt <b>${pct(A.dd)}</b> unter seinem Höchststand. ${A.dd > -0.03 ? "Er ist also kaum günstiger als sonst." : A.dd > -0.1 ? "Das ist ein kleiner Rabatt." : "Das ist ein deutlicher Rabatt."}`)}
-      ${grund(T3.rsi, A.rsi < 30 ? "Gerade wird auffällig viel verkauft (Panik). Das war historisch oft ein guter Einstieg." : A.rsi > 70 ? "Der Kurs ist zuletzt stark gestiegen. Das spricht eher gegen einen Extra-Kauf." : "Keine Panik und kein Hype: Die Stimmung ist normal.")}
+      ${grund(T3.rsi, A.rsi < 30 ? "Gerade wird auffällig viel verkauft (Panik). Das war historisch oft ein guter Einstieg." : A.rsi > 70 ? "Der Kurs ist zuletzt stark gestiegen. Das ist eher kein Grund, jetzt mehr als sonst zu kaufen." : "Keine Panik und kein Hype: Die Stimmung ist normal.")}
       ${grund(T3.sma, A.kurs >= A.sma ? "Der langfristige Trend zeigt nach oben (über der 200-Tage-Linie)." : `Der Kurs liegt ${pct(A.kurs / A.sma - 1)} unter seinem 200-Tage-Schnitt. Das ist günstig, aber der Abwärtstrend kann weitergehen.`)}
     </ul>
     <p class="hint" style="margin:12px 0 0">📲 Eine Push-Nachricht kommt, sobald die Empfehlung <b>7 oder höher</b> erreicht. Das war seit ${D.kurse.t[0].slice(0, 4)} an etwa ${nf(A.tageHoch * 100, 0)} % aller Börsentage so.` +
@@ -221,62 +220,34 @@ function render() {
     </tbody></table></div>
     <p class="hint" style="margin-top:10px">So setzt sich die Zahl zusammen: 1 Grundpunkt + bis zu 7,5 Punkte für den Abstand zum Hoch + bis zu 1,5 für Panik-Verkäufe (RSI) + bis zu 1 für den Abstand unter der 200-Tage-Linie. Ein hoher RSI (Hype) zieht bis zu 1 Punkt ab.</p>`;
 
-  // ---------- Status (Details)
-  const st = A.stufe;
-  const anteil = st ? R.stufen.find(x => x.stufe === st).anteil : 0;
-  let head, text;
-  if (st === 0) {
-    head = "Normal weiter sparen";
-    text = `Kein Dip. Dein Sparplan läuft wie gewohnt weiter, und die ${eur(R.ruecklage, 0)} pro Monat sammeln sich in der Dip-Rücklage (Tagesgeld). ` +
-      `Das erste Kaufsignal kommt bei einem Kurs von ${eur(A.naechste.kurs)} oder darunter (${pct(-A.naechste.schwelle, 0)} zum Hoch).`;
-  } else {
-    head = A.neuHeute ? `Neues Kaufsignal: Stufe ${st}` : `Stufe ${st} aktiv seit ${dat(A.phaseStart)}`;
-    text = `${STUFE_TXT[st]}: Der ETF liegt ${pct(A.dd)} unter seinem Hoch. Vorschlag: <b>${Math.round(anteil * 100)} % deiner Dip-Rücklage</b> zusätzlich investieren` +
-      (A.neuHeute ? "." : ", falls du das für diese Stufe noch nicht getan hast.") +
-      (A.naechste ? ` Die nächste Stufe (${A.naechste.stufe}) kommt bei ${eur(A.naechste.kurs)}.` : " Das ist die höchste Stufe.") +
-      (A.kurs < A.sma ? " Der Kurs liegt unter der 200-Tage-Linie, also im Abwärtstrend. Deshalb wird gestaffelt gekauft." : "");
-  }
+  // ---------- Kennzahlen (Details)
   const trend = A.kurs >= A.sma;
   const rsiTxt = A.rsi < 30 ? "überverkauft" : A.rsi > 70 ? "überkauft" : "neutral";
   $("status").innerHTML = `
-    <div class="status">
-      <div class="badge" style="background:var(--st${st});color:var(--stink${st})">${st}<small>Stufe</small></div>
-      <div><h2>${head}</h2><p>${text}</p></div>
-    </div>
-    <div class="tiles">
+    <h2>Kennzahlen</h2>
+    <div class="tiles" style="margin-top:8px">
       <div class="tile"><div class="l">Kurs</div><div class="v">${eur(A.kurs)}</div><div class="n">${dat(A.datum)}</div></div>
       <div class="tile"><div class="l">Abstand zum Hoch</div><div class="v">${pct(A.dd)}</div><div class="n">Hoch ${eur(A.hoch)} am ${dat(A.hochDatum)}</div></div>
       <div class="tile"><div class="l">200-Tage-Linie</div><div class="v">${trend ? "↗ darüber" : "↘ darunter"}</div><div class="n">${eur(A.sma)} (${pct(A.kurs / A.sma - 1)})</div></div>
       <div class="tile"><div class="l">RSI (14 Tage)</div><div class="v">${nf(A.rsi, 0)}</div><div class="n">${rsiTxt} · unter 30 = viel verkauft</div></div>
     </div>`;
 
-  // ---------- Regeln
-  $("regeln").innerHTML = `
-    <h2>Die Regel</h2>
-    <p class="hint">Beispiel: ${eur(R.spar, 0)} Sparplan + ${eur(R.ruecklage, 0)} Rücklage pro Monat. Die Beträge kannst du frei skalieren.</p>
-    <div class="ladder">
-      <div class="rung ${st === 0 ? "on" : ""}"><span class="dot" style="background:var(--st0);color:var(--stink0)">0</span><div>Weniger als ${pct(-R.stufen[0].schwelle, 0)} zum Hoch<div class="m">Sparplan läuft, Rücklage wächst</div></div></div>
-      ${R.stufen.map(x => `<div class="rung ${st === x.stufe ? "on" : ""}"><span class="dot" style="background:var(--st${x.stufe});color:var(--stink${x.stufe})">${x.stufe}</span>
-        <div>${STUFE_TXT[x.stufe]}: ${pct(-x.schwelle, 0)} oder tiefer<div class="m">${x.anteil === 1 ? "die komplette restliche Rücklage" : Math.round(x.anteil * 100) + " % der Rücklage"} investieren · aktuell bei ${eur(A.hoch * (1 - x.schwelle))}</div></div></div>`).join("")}
-    </div>
-    <p class="hint" style="margin-top:10px">Jede Stufe löst pro Dip-Phase nur einmal aus. Eine Phase endet, wenn der ETF wieder auf ${pct(-R.reset, 0)} an sein Hoch herankommt. Danach ist alles zurückgesetzt.</p>`;
-
   // ---------- Backtest
   const B = D.bt, E = B.ende;
-  const names = {A: `Sparplan ${eur(R.spar + R.ruecklage, 0)}`, B: `Sparplan ${eur(R.spar, 0)} + Dip-Rücklage`, C: "Nur Dip-Käufe"};
+  const names = {A: "Immer sofort kaufen", B: `${eur(R.ruecklage, 0)} pro Monat für Dips aufheben`, C: "Nur bei Dips kaufen"};
   const cols = {A: "var(--s1)", B: "var(--s2)", C: "var(--s3)"};
   const best = Object.keys(E).sort((a, b) => E[b].wert - E[a].wert)[0];
   const winsB = B.jahre.filter(j => j.B > j.A).length, winsC = B.jahre.filter(j => j.C > j.A).length;
   $("backtest").innerHTML = `
-    <h2>Backtest seit ${dat(B.start)}</h2>
-    <p class="hint">Alle drei Varianten zahlen jeden Monat genau gleich viel ein (${eur(R.spar + R.ruecklage, 0)}, insgesamt ${eur(B.ein, 0)}). Unterschied ist nur, <i>wann</i> gekauft wird.</p>
+    <h2>Lohnt es sich, auf Dips zu warten?</h2>
+    <p class="hint">Backtest seit ${dat(B.start)}: Angenommen, du hast jeden Monat ${eur(R.spar + R.ruecklage, 0)} zum Anlegen, insgesamt ${eur(B.ein, 0)}. Du kaufst entweder sofort, hebst einen Teil für Rücksetzer auf (25 % bei −5 %, 50 % bei −10 %, alles bei −20 % unter dem Hoch) oder kaufst nur bei Rücksetzern. Der einzige Unterschied ist, <i>wann</i> gekauft wird.</p>
     <div class="res">${["A", "B", "C"].map(k => `<div class="tile"><div class="l"><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${cols[k]};margin-right:6px"></i>${names[k]}</div>
       <div class="v">${eur(E[k].wert, 0)}${k === best ? " 🏆" : ""}</div><div class="n">${pct(E[k].wert / B.ein - 1, 0)} auf Einzahlungen${E[k].cash > 1 ? ` · davon ${eur(E[k].cash, 0)} Cash` : ""}</div></div>`).join("")}</div>
     <div class="legend">${["A", "B", "C"].map(k => `<span><i style="background:${cols[k]}"></i>${names[k]}</span>`).join("")}<span><i style="background:var(--muted)"></i>Eingezahlt</span></div>
     <div class="chart" id="cBt"></div>
     <h2 style="margin-top:18px">Je nach Startjahr</h2>
-    <p class="hint">Wer im jeweiligen Jahr angefangen hätte, stünde heute so da. Die Dip-Rücklage war in <b>${winsB} von ${B.jahre.length}</b> Startjahren besser als der reine Sparplan, „Nur Dip-Käufe“ in <b>${winsC} von ${B.jahre.length}</b>.</p>
-    <div class="scroll"><table><thead><tr><th>Start</th><th>Eingezahlt</th><th>Sparplan</th><th>+ Rücklage</th><th>Nur Dips</th></tr></thead><tbody>
+    <p class="hint">Wer im jeweiligen Jahr angefangen hätte, stünde heute so da. Einen Teil für Dips aufzuheben war in <b>${winsB} von ${B.jahre.length}</b> Startjahren besser als sofort zu kaufen, nur bei Dips zu kaufen in <b>${winsC} von ${B.jahre.length}</b>.</p>
+    <div class="scroll"><table><thead><tr><th>Start</th><th>Eingezahlt</th><th>Sofort</th><th>Teil aufheben</th><th>Nur Dips</th></tr></thead><tbody>
     ${B.jahre.map(j => `<tr><td>${j.jahr}</td><td>${eur(j.ein, 0)}</td><td>${eur(j.A, 0)}</td>
       <td class="${j.B >= j.A ? "pos" : "neg"}">${eur(j.B, 0)} <small>(${pct(j.B / j.A - 1)})</small></td>
       <td class="${j.C >= j.A ? "pos" : "neg"}">${eur(j.C, 0)} <small>(${pct(j.C / j.A - 1)})</small></td></tr>`).join("")}
@@ -397,7 +368,7 @@ function drawAll() {
     refs: R.map(r => ({v: -r.schwelle * 100, label: "Stufe " + r.stufe}))});
   const V = D.bt.verlauf, BT = V.t.map(s => Date.parse(s));
   chart($("cBt"), {t: BT, label: "Backtest", fmt: (v, f) => f ? eur(v, 0) : nf(v / 1000, 0) + "k",
-    series: [{name: "Sparplan", color: css("--s1"), v: V.A}, {name: "+ Rücklage", color: css("--s2"), v: V.B},
+    series: [{name: "Sofort", color: css("--s1"), v: V.A}, {name: "Teil aufheben", color: css("--s2"), v: V.B},
       {name: "Nur Dips", color: css("--s3"), v: V.C}, {name: "Eingezahlt", color: css("--muted"), v: V.ein, width: 1.5, dash: "4 4"}]});
 }
 
