@@ -194,7 +194,7 @@ function render() {
   const t7 = g7.reduce((a, g) => a + g.tage, 0);
   const avg7 = t7 ? g7.reduce((a, g) => a + g.avg * g.tage, 0) / t7 : null;
   const plus7 = t7 ? g7.reduce((a, g) => a + g.plus * g.tage, 0) / t7 : null;
-  const grund = (p, txt) => `<li><span class="pt">${p >= 0.05 ? "+" + nf(p, 1) : p <= -0.05 ? "−" + nf(-p, 1) : "±0"}</span>${txt}</li>`;
+  const grund = (p, txt) => `<li><span class="pt">${p >= 0.05 ? "+" + nf(p, 1) : p <= -0.05 ? "−" + nf(-p, 1) : "±0"}</span><span>${txt}</span></li>`;
   $("empf").innerHTML = `
     <div class="eh">
       <div class="big" style="background:var(--b${band.i});color:var(--bink${band.i})">${sc}<small>von 10</small></div>
