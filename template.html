@@ -5,7 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MSCI-Kompass</title>
 <meta name="description" content="Täglicher Kaufsignal-Check für den MSCI World mit Backtest">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧭</text></svg>">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#f9f9f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MSCI-Kompass">
 <style>
 :root{
   color-scheme:light;
@@ -80,6 +86,11 @@ summary{cursor:pointer;color:var(--ink2);font-size:.9rem}
 footer{color:var(--muted);font-size:.8rem;text-align:center;margin-top:24px}
 ul{padding-left:20px;margin:6px 0}
 li{margin:3px 0}
+.install{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.install img{width:44px;height:44px;border-radius:10px;flex:none}
+.install div{flex:1;min-width:180px;font-size:.9rem;color:var(--ink2)}
+.install b{color:var(--ink)}
+.btn{font:inherit;font-weight:600;border:0;border-radius:10px;padding:10px 16px;background:#184f95;color:#fff;cursor:pointer}
 </style>
 </head>
 <body>
@@ -87,6 +98,7 @@ li{margin:3px 0}
   <h1>🧭 MSCI-Kompass</h1>
   <p class="sub" id="sub"></p>
   <div id="warn"></div>
+  <section class="card install" id="install" hidden></section>
 
   <section class="card" id="status"></section>
 
@@ -312,6 +324,29 @@ function drawAll() {
     series: [{name: "Sparplan", color: css("--s1"), v: V.A}, {name: "+ Rücklage", color: css("--s2"), v: V.B},
       {name: "Nur Dips", color: css("--s3"), v: V.C}, {name: "Eingezahlt", color: css("--muted"), v: V.ein, width: 1.5, dash: "4 4"}]});
 }
+
+// ---------- Als App installieren
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+const alsApp = () => matchMedia("(display-mode: standalone)").matches || matchMedia("(display-mode: minimal-ui)").matches || navigator.standalone === true;
+let installAngebot = null;
+function installKarte() {
+  const el = $("install");
+  if (alsApp()) { el.hidden = true; return; }
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  el.hidden = false;
+  el.innerHTML = `<img src="icon-192.png" alt=""><div><b>Als App auf den Startbildschirm</b><br>` +
+    (installAngebot ? "Ein Tipp, und der MSCI-Kompass liegt als eigene App auf deinem Handy."
+      : ios ? "In Safari unten auf das Teilen-Symbol tippen und dann „Zum Home-Bildschirm“."
+      : "Im Browser-Menü ⋮ „App installieren“ wählen. Falls der Button hier nicht erscheint, Seite einmal neu laden.") +
+    `</div>${installAngebot ? '<button class="btn" id="installBtn">Installieren</button>' : ""}`;
+  if (installAngebot) $("installBtn").onclick = async () => {
+    installAngebot.prompt(); const r = await installAngebot.userChoice; installAngebot = null;
+    if (r.outcome === "accepted") $("install").hidden = true; else installKarte();
+  };
+}
+addEventListener("beforeinstallprompt", e => { e.preventDefault(); installAngebot = e; installKarte(); });
+addEventListener("appinstalled", () => { $("install").hidden = true; });
+installKarte();
 
 rangeButtons("rangeKurs", "kurs"); rangeButtons("rangeDd", "dd");
 render();
