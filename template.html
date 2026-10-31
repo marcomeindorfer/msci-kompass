@@ -208,7 +208,7 @@ function render() {
       ${grund(T3.rsi, A.rsi < 30 ? "Gerade wird auffällig viel verkauft (Panik). Das war historisch oft ein guter Einstieg." : A.rsi > 70 ? "Der Kurs ist zuletzt stark gestiegen. Das spricht eher gegen einen Extra-Kauf." : "Keine Panik und kein Hype: Die Stimmung ist normal.")}
       ${grund(T3.sma, A.kurs >= A.sma ? "Der langfristige Trend zeigt nach oben (über der 200-Tage-Linie)." : `Der Kurs liegt ${pct(A.kurs / A.sma - 1)} unter seinem 200-Tage-Schnitt. Das ist günstig, aber der Abwärtstrend kann weitergehen.`)}
     </ul>
-    <p class="hint" style="margin:12px 0 0">📲 Eine Push-Nachricht kommt, sobald die Empfehlung <b>7 oder höher</b> erreicht. Das war in den letzten Jahren an etwa ${nf(A.tageHoch * 100, 0)} % der Tage so.` +
+    <p class="hint" style="margin:12px 0 0">📲 Eine Push-Nachricht kommt, sobald die Empfehlung <b>7 oder höher</b> erreicht. Das war seit ${D.kurse.t[0].slice(0, 4)} an etwa ${nf(A.tageHoch * 100, 0)} % aller Börsentage so.` +
       (avg7 != null ? ` Wer an solchen Tagen gekauft hat, lag 12 Monate später in ${nf(plus7 * 100, 0)} % der Fälle im Plus, im Schnitt ${pct(avg7, 0)}. Über alle Tage gerechnet waren es ${pct(A.alle.avg, 0)}.` : "") + `</p>`;
 
   // ---------- Wie gut war die Empfehlung?
