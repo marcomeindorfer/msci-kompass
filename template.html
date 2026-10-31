@@ -83,6 +83,7 @@ th{color:var(--ink2);font-weight:600}
 .res{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:12px 0}
 details{margin-top:8px}
 summary{cursor:pointer;color:var(--ink2);font-size:.9rem}
+summary.more::-webkit-details-marker{display:none}
 footer{color:var(--muted);font-size:.8rem;text-align:center;margin-top:24px}
 ul{padding-left:20px;margin:6px 0}
 li{margin:3px 0}
@@ -90,6 +91,24 @@ li{margin:3px 0}
 .install img{width:44px;height:44px;border-radius:10px;flex:none}
 .install div{flex:1;min-width:180px;font-size:.9rem;color:var(--ink2)}
 .install b{color:var(--ink)}
+:root{--b0:#e1e0d9;--b1:#b7d3f6;--b2:#6da7ec;--b3:#2a78d6;--b4:#104281;--bink0:#0b0b0b;--bink1:#0b0b0b;--bink2:#0b0b0b;--bink3:#fff;--bink4:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--b0:#383835;--b1:#184f95;--b2:#256abf;--b3:#5598e7;--b4:#b7d3f6;--bink0:#f0efec;--bink1:#fff;--bink2:#fff;--bink3:#0b0b0b;--bink4:#0b0b0b}}
+:root[data-theme="dark"]{--b0:#383835;--b1:#184f95;--b2:#256abf;--b3:#5598e7;--b4:#b7d3f6;--bink0:#f0efec;--bink1:#fff;--bink2:#fff;--bink3:#0b0b0b;--bink4:#0b0b0b}
+.eh{display:flex;gap:16px;align-items:center}
+.big{flex:none;width:88px;height:88px;border-radius:18px;display:grid;place-content:center;text-align:center;font-size:2.6rem;font-weight:750;line-height:1}
+.big small{font-size:.7rem;font-weight:600;margin-top:4px}
+.lbl{color:var(--ink2);font-size:.82rem;text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.eh h2{font-size:1.3rem;line-height:1.25;margin:2px 0 0}
+.scale{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;margin:18px 0 4px;align-items:end}
+.scale span{height:10px;border-radius:3px}
+.scale span.on{height:20px;outline:2px solid var(--ink);outline-offset:1px}
+.scale-l{display:flex;justify-content:space-between;color:var(--muted);font-size:.75rem}
+.was{margin:14px 0 10px;font-size:1rem}
+.gruende{list-style:none;padding:0;margin:0;display:grid;gap:6px}
+.gruende li{display:flex;gap:10px;font-size:.9rem;color:var(--ink2);margin:0}
+.pt{flex:none;min-width:40px;text-align:center;font-weight:650;font-size:.8rem;border:1px solid var(--border);border-radius:6px;padding:1px 4px;color:var(--ink);height:fit-content;font-variant-numeric:tabular-nums}
+summary.more{display:block;text-align:center;padding:12px;border:1px dashed var(--axis);border-radius:12px;margin:0 0 16px;color:var(--ink2);font-weight:600}
+details[open] summary.more{border-style:solid}
 .btn{font:inherit;font-weight:600;border:0;border-radius:10px;padding:10px 16px;background:#184f95;color:#fff;cursor:pointer}
 </style>
 </head>
@@ -99,6 +118,20 @@ li{margin:3px 0}
   <p class="sub" id="sub"></p>
   <div id="warn"></div>
   <section class="card install" id="install" hidden></section>
+
+  <section class="card" id="empf"></section>
+
+  <details id="details">
+  <summary class="more">Details, Charts &amp; Backtest anzeigen</summary>
+
+  <section class="card" id="gute"></section>
+
+  <section class="card">
+    <h2>Kaufempfehlung im Zeitverlauf</h2>
+    <p class="hint">So hoch war die Empfehlung an jedem Tag. Ab der gestrichelten Linie (7) kommt eine Push-Nachricht.</p>
+    <div class="seg" id="rangeScore"></div>
+    <div class="chart" id="cScore"></div>
+  </section>
 
   <section class="card" id="status"></section>
 
@@ -132,6 +165,7 @@ li{margin:3px 0}
       <li>Gebühren, Steuern und Zinsen auf die Cash-Rücklage sind im Backtest nicht berücksichtigt. Mit 2–3 % Tagesgeldzins sieht die Rücklage etwas besser aus.</li>
     </ul>
   </section>
+  </details>
   <footer id="foot"></footer>
 </main>
 <script>
@@ -143,13 +177,51 @@ const pct = (x, d = 1) => (x > 0 ? "+" : x < 0 ? "−" : "") + nf(Math.abs(x * 1
 const dat = s => { const [y, m, d] = s.split("-"); return `${d}.${m}.${y}`; };
 const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 const STUFE_TXT = ["Kein Dip", "Kleiner Dip", "Korrektur", "Crash"];
+const BAND = s => s <= 2 ? {i: 0, titel: "Kein besonderer Kaufzeitpunkt", text: "Lass deinen Sparplan einfach normal weiterlaufen. Ein Extra-Kauf bringt gerade keinen Vorteil. Geld, das du zusätzlich anlegen willst, wartet besser auf einen Rücksetzer."}
+  : s <= 4 ? {i: 1, titel: "Etwas günstiger als sonst", text: "Ein kleiner Extra-Kauf ist okay, aber kein Muss. Der Sparplan läuft normal weiter."}
+  : s <= 6 ? {i: 2, titel: "Guter Zeitpunkt für einen kleinen Extra-Kauf", text: "Der ETF ist spürbar günstiger als zuletzt. Ein Teil deines Extra-Geldes kann jetzt investiert werden, den Rest hebst du für den Fall auf, dass es weiter fällt."}
+  : s <= 8 ? {i: 3, titel: "Klare Kaufempfehlung", text: "Der ETF hat deutlich nachgegeben. Ein Extra-Kauf zusätzlich zum Sparplan lohnt sich jetzt. Wenn der Trend noch nach unten zeigt, kauf am besten in zwei Teilen im Abstand von ein paar Wochen."}
+  : {i: 4, titel: "Seltene Kaufgelegenheit", text: "So günstig gibt es den MSCI World nur selten, etwa bei großen Crashs. Historisch waren solche Tage die besten Einstiege. Ein größerer Extra-Kauf lohnt sich, solange du das Geld langfristig nicht brauchst."};
 
 function render() {
   const A = D.akt, R = D.regeln;
   $("sub").textContent = `${D.name} (${D.ticker}) · Kurs vom ${dat(A.datum)}, geprüft ${new Date(D.erstellt).toLocaleString("de-DE", {dateStyle: "short", timeStyle: "short"})} Uhr (Börsenkurs ca. 15 Min. verzögert)`;
   if (D.warnung) $("warn").innerHTML = `<div class="warn">⚠️ ${D.warnung}</div>`;
 
-  // ---------- Status
+  // ---------- Kaufempfehlung 1-10 (oben)
+  const sc = A.score, band = BAND(sc), T3 = A.teile;
+  const g7 = A.gruppen.filter(g => g.von >= 7 && g.tage);
+  const t7 = g7.reduce((a, g) => a + g.tage, 0);
+  const avg7 = t7 ? g7.reduce((a, g) => a + g.avg * g.tage, 0) / t7 : null;
+  const plus7 = t7 ? g7.reduce((a, g) => a + g.plus * g.tage, 0) / t7 : null;
+  const grund = (p, txt) => `<li><span class="pt">${p >= 0.05 ? "+" + nf(p, 1) : p <= -0.05 ? "−" + nf(-p, 1) : "±0"}</span>${txt}</li>`;
+  $("empf").innerHTML = `
+    <div class="eh">
+      <div class="big" style="background:var(--b${band.i});color:var(--bink${band.i})">${sc}<small>von 10</small></div>
+      <div><div class="lbl">Kaufempfehlung</div><h2>${band.titel}</h2></div>
+    </div>
+    <div class="scale" aria-hidden="true">${Array.from({length: 10}, (_, k) => `<span class="${k + 1 === sc ? "on" : ""}" style="background:var(--b${BAND(k + 1).i})"></span>`).join("")}</div>
+    <div class="scale-l"><span>1 · normal sparen</span><span>10 · seltene Chance</span></div>
+    <p class="was">${band.text}</p>
+    <ul class="gruende">
+      ${grund(T3.dd, `Der ETF liegt <b>${pct(A.dd)}</b> unter seinem Höchststand. ${A.dd > -0.03 ? "Er ist also kaum günstiger als sonst." : A.dd > -0.1 ? "Das ist ein kleiner Rabatt." : "Das ist ein deutlicher Rabatt."}`)}
+      ${grund(T3.rsi, A.rsi < 30 ? "Gerade wird auffällig viel verkauft (Panik). Das war historisch oft ein guter Einstieg." : A.rsi > 70 ? "Der Kurs ist zuletzt stark gestiegen. Das spricht eher gegen einen Extra-Kauf." : "Keine Panik und kein Hype: Die Stimmung ist normal.")}
+      ${grund(T3.sma, A.kurs >= A.sma ? "Der langfristige Trend zeigt nach oben (über der 200-Tage-Linie)." : `Der Kurs liegt ${pct(A.kurs / A.sma - 1)} unter seinem 200-Tage-Schnitt. Das ist günstig, aber der Abwärtstrend kann weitergehen.`)}
+    </ul>
+    <p class="hint" style="margin:12px 0 0">📲 Eine Push-Nachricht kommt, sobald die Empfehlung <b>7 oder höher</b> erreicht. Das war in den letzten Jahren an etwa ${nf(A.tageHoch * 100, 0)} % der Tage so.` +
+      (avg7 != null ? ` Wer an solchen Tagen gekauft hat, lag 12 Monate später in ${nf(plus7 * 100, 0)} % der Fälle im Plus, im Schnitt ${pct(avg7, 0)}. Über alle Tage gerechnet waren es ${pct(A.alle.avg, 0)}.` : "") + `</p>`;
+
+  // ---------- Wie gut war die Empfehlung?
+  $("gute").innerHTML = `
+    <h2>Wie gut war die Empfehlung bisher?</h2>
+    <p class="hint">Für jeden Börsentag seit ${dat(D.kurse.t[0])}: Wie hoch war die Empfehlung, und wie viel hätte ein Kauf an diesem Tag 12 Monate später gebracht?</p>
+    <div class="scroll"><table><thead><tr><th>Empfehlung</th><th>Tage</th><th>Ø nach 12 Mon.</th><th>davon im Plus</th></tr></thead><tbody>
+    ${A.gruppen.map(g => `<tr><td>${g.von}–${g.bis}</td><td>${g.tage}</td><td>${g.avg == null ? "–" : pct(g.avg)}</td><td>${g.plus == null ? "–" : nf(g.plus * 100, 0) + " %"}</td></tr>`).join("")}
+    <tr><td><b>alle Tage</b></td><td>${A.alle.tage}</td><td><b>${pct(A.alle.avg)}</b></td><td>${nf(A.alle.plus * 100, 0)} %</td></tr>
+    </tbody></table></div>
+    <p class="hint" style="margin-top:10px">So setzt sich die Zahl zusammen: 1 Grundpunkt + bis zu 7,5 Punkte für den Abstand zum Hoch + bis zu 1,5 für Panik-Verkäufe (RSI) + bis zu 1 für den Abstand unter der 200-Tage-Linie. Ein hoher RSI (Hype) zieht bis zu 1 Punkt ab.</p>`;
+
+  // ---------- Status (Details)
   const st = A.stufe;
   const anteil = st ? R.stufen.find(x => x.stufe === st).anteil : 0;
   let head, text;
@@ -231,7 +303,7 @@ function render() {
 const K = D.kurse;
 const T = K.t.map(s => Date.parse(s));
 const ranges = [["1J", 1], ["3J", 3], ["5J", 5], ["Max", 0]];
-const sel = {kurs: 3, dd: 0};
+const sel = {kurs: 3, dd: 0, score: 5};
 
 function rangeButtons(id, key) {
   $(id).innerHTML = ranges.map(([l, y]) => `<button aria-pressed="${sel[key] === y}" data-y="${y}">${l}</button>`).join("");
@@ -264,7 +336,7 @@ function chart(el, cfg) {
   const pad = (hi - lo) * 0.06 || 1; if (cfg.yMax == null) hi += pad; if (cfg.yMin == null) lo -= pad;
   const x = ms => m.l + (ms - t[0]) / (t[n - 1] - t[0] || 1) * iw;
   const y = v => m.t + (hi - v) / (hi - lo) * ih;
-  const yt = niceTicks(lo, hi, 4);
+  const yt = cfg.ticks || niceTicks(lo, hi, 4);
   const span = (t[n - 1] - t[0]) / 864e5;
   const xt = []; const d0 = new Date(t[0]), d1 = new Date(t[n - 1]);
   if (span > 800) { const yrs = d1.getFullYear() - d0.getFullYear(); const st = Math.max(1, Math.ceil(yrs / 6));
@@ -308,6 +380,10 @@ function chart(el, cfg) {
 }
 
 function drawAll() {
+  if (!$("details").open) return;  // Charts erst zeichnen, wenn die Details sichtbar sind (sonst Breite 0)
+  const iS = fromIndex(sel.score);
+  chart($("cScore"), {t: T.slice(iS), label: "Kaufempfehlung", yMin: 0.5, yMax: 10.5, fmt: (v, f) => f ? v + "/10" : (v % 1 ? "" : String(v)),
+    ticks: [1, 4, 7, 10], series: [{name: "Empfehlung", color: css("--s1"), v: K.score.slice(iS), width: 1.5}], refs: [{v: 7, label: "Push ab 7"}]});
   let i0 = fromIndex(sel.kurs);
   const sl = a => a.slice(i0);
   const sigIdx = new Map(T.map((t, i) => [K.t[i], i]));
@@ -348,7 +424,8 @@ addEventListener("beforeinstallprompt", e => { e.preventDefault(); installAngebo
 addEventListener("appinstalled", () => { $("install").hidden = true; });
 installKarte();
 
-rangeButtons("rangeKurs", "kurs"); rangeButtons("rangeDd", "dd");
+rangeButtons("rangeKurs", "kurs"); rangeButtons("rangeDd", "dd"); rangeButtons("rangeScore", "score");
+$("details").addEventListener("toggle", drawAll);
 render();
 let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(drawAll, 150); });
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", drawAll);

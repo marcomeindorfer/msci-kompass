@@ -11,6 +11,7 @@ import sys
 import time
 import urllib.request
 
+import numpy as np
 import pandas as pd
 
 # ---------------------------------------------------------------- Einstellungen
@@ -77,6 +78,22 @@ def rsi(s, n=14):
     up = d.clip(lower=0).ewm(alpha=1 / n, adjust=False).mean()
     down = (-d.clip(upper=0)).ewm(alpha=1 / n, adjust=False).mean()
     return 100 - 100 / (1 + up / down)
+
+
+# Kaufempfehlung 1-10: Punkte fuer Abstand zum Hoch (Hauptfaktor), RSI (Panik-Verkaeufe)
+# und Abstand unter der 200-Tage-Linie. Stuetzpunkte werden linear interpoliert.
+SCORE_DD = ([0, 2, 5, 10, 15, 20, 30], [0, 1, 3, 4.5, 5.5, 6.5, 7.5])        # % unter Hoch
+SCORE_RSI = ([20, 30, 40, 60, 70, 80], [1.5, 1, 0.3, 0, -0.5, -1])         # RSI 14
+SCORE_SMA = ([-15, -10, -5, 0], [1, 0.8, 0.4, 0])                          # % zur 200-Tage-Linie
+PUSH_AB, PUSH_STARK, PUSH_RESET = 7, 9, 4   # Push ab 7 und nochmal ab 9; zurueckgesetzt bei <= 4
+
+
+def score_teile(dd, r, sma_abst):
+    """Liefert die drei Punkte-Anteile als Serien (alle Eingaben als pandas Series)."""
+    p_dd = pd.Series(np.interp((-dd * 100).to_numpy(), *SCORE_DD), index=dd.index)
+    p_rsi = pd.Series(np.interp(r.fillna(50).to_numpy(), *SCORE_RSI), index=dd.index)
+    p_sma = pd.Series(np.interp((sma_abst * 100).fillna(0).to_numpy(), *SCORE_SMA), index=dd.index)
+    return p_dd, p_rsi, p_sma
 
 
 def signale(dd):
@@ -167,6 +184,23 @@ def main():
         "neuHeute": bool(events and events[-1]["d"] == heute),
         "naechste": None,
     }
+    # Kaufempfehlung 1-10
+    p_dd, p_rsi, p_sma = score_teile(dd, r, s / sma - 1)
+    score = (1 + p_dd + p_rsi + p_sma).round().clip(1, 10).astype(int)
+    akt.update({"score": int(score.iloc[-1]),
+                "teile": {"dd": float(p_dd.iloc[-1]), "rsi": float(p_rsi.iloc[-1]), "sma": float(p_sma.iloc[-1])}})
+    # Wie gut war jede Empfehlung historisch? Rendite 12 Monate (252 Handelstage) spaeter
+    fwd = (s.shift(-252) / s - 1).dropna()
+    gruppen = []
+    for lo, hi in [(1, 2), (3, 4), (5, 6), (7, 8), (9, 10)]:
+        f = fwd[(score.loc[fwd.index] >= lo) & (score.loc[fwd.index] <= hi)]
+        gruppen.append({"von": lo, "bis": hi, "tage": int(len(f)),
+                        "avg": float(f.mean()) if len(f) else None,
+                        "plus": float((f > 0).mean()) if len(f) else None})
+    akt["alle"] = {"tage": int(len(fwd)), "avg": float(fwd.mean()), "plus": float((fwd > 0).mean())}
+    akt["gruppen"] = gruppen
+    akt["tageHoch"] = float((score >= PUSH_AB).mean())  # Anteil der Tage mit Empfehlung >= 7
+
     for schwelle, st, anteil in STUFEN:
         if st > level:
             akt["naechste"] = {"stufe": st, "schwelle": schwelle, "anteil": anteil,
@@ -200,7 +234,8 @@ def main():
     kurse = {"t": [d.strftime("%Y-%m-%d") for d in s.index],
              "p": [round(float(v), 2) for v in s],
              "sma": [None if pd.isna(v) else round(float(v), 2) for v in sma],
-             "dd": [round(float(v) * 100, 2) for v in dd]}
+             "dd": [round(float(v) * 100, 2) for v in dd],
+             "score": [int(v) for v in score]}
 
     daten = {
         "ticker": ticker, "name": name, "warnung": warnung,
@@ -217,29 +252,35 @@ def main():
     html = html.replace("/*__DATEN__*/null", json.dumps(daten, separators=(",", ":"), allow_nan=False))
     with open(OUT, "w", encoding="utf-8") as f:
         f.write(html)
-    print(f"{ticker} {akt['datum']}: Kurs {kurs:.2f}, Abstand {akt['dd']*100:.1f} %, Stufe {level}")
+    sc = akt["score"]
+    print(f"{ticker} {akt['datum']}: Kurs {kurs:.2f}, Abstand {akt['dd']*100:.1f} %, "
+          f"RSI {akt['rsi']:.0f}, Empfehlung {sc}/10")
 
     # ---------------------------------------------------- Benachrichtigung
     state = {}
     if os.path.exists(STATE):
         with open(STATE, encoding="utf-8") as f:
             state = json.load(f)
-    phase_key = akt["phaseStart"]
-    gemeldet = state.get("stufe", 0) if state.get("phase") == phase_key else 0
+    gemeldet = int(state.get("gemeldet", 0))
+    if sc <= PUSH_RESET:
+        gemeldet = 0
     if os.environ.get("TEST_PUSH") == "true":
-        push("MSCI-Kompass: Test", f"Push funktioniert. Kurs {eur(kurs)}, {pct(akt['dd'])} zum Hoch, "
-             f"aktuelle Stufe {level}.", prio=3, tags=("white_check_mark",))
-    if level > gemeldet and phase_key:
-        anteil = ANTEIL[level]
-        text = (f"Kurs {eur(kurs)} ist {pct(akt['dd'])} unter dem Hoch ({eur(hoch)}). "
-                f"Vorschlag: {int(anteil * 100)} % deiner Dip-Rücklage zusätzlich investieren.")
-        if akt["naechste"]:
-            text += f" Nächste Stufe bei {eur(akt['naechste']['kurs'])}."
+        push("MSCI-Kompass: Test", f"Push funktioniert. Aktuelle Kaufempfehlung: {sc}/10 "
+             f"(Kurs {eur(kurs)}, {pct(akt['dd'])} zum Hoch).", prio=3, tags=("white_check_mark",))
+    stufe_jetzt = PUSH_STARK if sc >= PUSH_STARK else PUSH_AB if sc >= PUSH_AB else 0
+    if stufe_jetzt > gemeldet:
+        if stufe_jetzt == PUSH_STARK:
+            titel, kern, prio = f"MSCI World: Seltene Kaufgelegenheit ({sc}/10)", "Ein größerer Extra-Kauf lohnt sich.", 5
+        else:
+            titel, kern, prio = f"MSCI World: Kaufempfehlung {sc}/10", "Ein Extra-Kauf zusätzlich zum Sparplan lohnt sich.", 4
+        text = f"{kern} Der ETF kostet {eur(kurs)} und liegt {pct(akt['dd'])} unter seinem Hoch."
+        if akt["rsi"] < 30:
+            text += " Gerade wird viel verkauft (Panik), historisch oft ein guter Einstieg."
         if kurs < akt["sma"]:
-            text += " Kurs liegt unter der 200-Tage-Linie: Abwärtstrend, der Dip kann weitergehen."
-        push(f"MSCI World: Kaufsignal Stufe {level}", text, prio=4 if level < 3 else 5)
-    state = {"phase": phase_key, "stufe": max(level, gemeldet) if phase_key else 0,
-             "datum": akt["datum"]}
+            text += " Achtung: Abwärtstrend, es kann noch weiter fallen. Am besten in 2 Teilen kaufen."
+        push(titel, text, prio=prio)
+        gemeldet = stufe_jetzt
+    state = {"gemeldet": gemeldet, "score": sc, "datum": akt["datum"]}
     with open(STATE, "w", encoding="utf-8") as f:
         json.dump(state, f, indent=2)
 
